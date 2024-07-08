@@ -23,8 +23,6 @@ file_data = {}
 label_data = {}
 
 
-# TODO: Add a note in both the label information and file information dialogue boxes that notify the user of the option
-# TODO: to create or to overwrite
 class Automator:
     def __init__(self):
         self.existed_index = 2
@@ -224,8 +222,6 @@ class Automator:
         note_text1 = ("Note: If you are editing an existing part or deleting parts, you do not need to add the"
                       " description column letter")
         note_label1 = ttk.Label(root, text=note_text1, foreground="red", wraplength=580)
-
-
 
         # Text boxes
         txtInputFile = tk.Entry(root)
@@ -535,7 +531,8 @@ class Automator:
             # Check for usage of the description column letter
             if file_data["Desc Column Letter"] != "":
                 desc_col_letter = file_data["Desc Column Letter"]
-            else: desc_col_letter = ''
+            else:
+                desc_col_letter = ''
 
             n = file_data["Sheet Index"]
             sheets = book.sheetnames
@@ -597,7 +594,7 @@ class Automator:
                 # Here, we use simple logic to determine whether a checkbox should be clicked
                 # Either the box is checked in our form and unchecked in Epicor or it's unchecked in our form and
                 # checked in Epicor
-                if label_data["Priced Part"] and main_window.child_window(auto_id="epiCheckBox1").get_toggle_state()\
+                if label_data["Priced Part"] and main_window.child_window(auto_id="epiCheckBox1").get_toggle_state() \
                         == 0:
                     main_window.child_window(auto_id="epiCheckBox1").click_input()
                 elif (not label_data["Priced Part"] and main_window.child_window(auto_id="epiCheckBox1").
