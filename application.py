@@ -3,6 +3,9 @@ from tkinter import ttk, messagebox
 from erp_manager import OperationType
 from forms import CreateForm, OverwriteForm, DeleteForm
 
+# TODO: Must apply verifications on all inputs: verify excel file type, valid sheet name, column letters,
+#  and row numbers
+
 
 class Application:
     def __init__(self, erp_manager):
@@ -36,12 +39,12 @@ class Application:
     def open_form(self, FormClass, operation_type):
         form_window = tk.Toplevel(self.root)
         form = FormClass(form_window)
-        form.create_form()
-        self.root.withdraw() # Hide the main window
+        form.create_file_form()
+        self.root.withdraw()  # Hide the main window
         self.root.wait_window(form_window)
-        if form.data:
+        if form.file_data:
             try:
-                self.erp_manager.perform_operation(operation_type, form.data)
+                self.erp_manager.perform_operation(operation_type, form.file_data, form.label_data)
                 messagebox.showinfo("Success", f"{operation_type.name} operation completed successfully.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))

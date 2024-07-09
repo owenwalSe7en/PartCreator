@@ -527,7 +527,8 @@ class Automator:
             # Load in user data
             last_row = int(file_data["Last Row"])
             first_row = int(file_data["First Row"])
-            pn_col_letter = file_data["PN Column Letter"]
+            pn_col_letter = file_data["PN Column Letter"]\
+
             # Check for usage of the description column letter
             if file_data["Desc Column Letter"] != "":
                 desc_col_letter = file_data["Desc Column Letter"]
