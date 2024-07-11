@@ -11,7 +11,6 @@ import os
 import re
 
 
-
 # region Validation Methods
 
 def sheet_exists(excel_file_path, sheet_name):
@@ -172,15 +171,15 @@ class BaseForm:
             self.master.destroy()
             sys.exit()
 
-    def create_file_form(self):
+    def create_file_form(self, operation_type):
         # To be implemented by subclasses
         pass
 
-    def create_label_form(self):
+    def create_label_form(self, operation_type):
         # To be implemented by subclasses
         pass
 
-    def submit_file_data(self, target_dict):
+    def submit_file_data(self, target_dict, operation_type):
         for label, var in self.file_widgets:
             if var.get().strip() == "":
                 messagebox.showerror("Error", "There are missing fields in the current form")
@@ -229,20 +228,39 @@ class BaseForm:
         # Verify the current subclass isn't DeleteForm
         class_name = type(self).__name__
         if class_name != "DeleteForm":
-            self.create_label_form()
+            self.create_label_form(operation_type)
         else:
             # Close the current form
             self.master.destroy()
 
-    def submit_label_data(self, target_dict):
-        # Variable that counts the amount of empty fields
+    def submit_label_data(self, target_dict, operation_type):
+        # Variable that checks for the CREATE operation type
+        # This type should not have any empty spaces
+        is_create_operation = False
+        if operation_type.name == "CREATE":
+            is_create_operation = True
+
+        # Variable that counts the amount of total empty fields
         empty_fields = 0
+        # Variable that counts the amount of empty dropdown fields
+        empty_dropdown_fields = 0
+
         for label, var in self.label_widgets:
             if var.get() == "" or var.get() == False:
                 empty_fields += 1
 
+            if var.get() == "":
+                empty_dropdown_fields += 1
+
             target_dict[label] = var.get()
 
+        # Check for empty dropdown fields in case of user creating
+        if is_create_operation and empty_dropdown_fields > 0:
+            messagebox.showerror("Input Error", "When you are creating parts you must fill in all dropdown"
+                                                " fields")
+            return
+
+        # In the case of user overwriting with no inputs, ask for confirmation
         if empty_fields == len(target_dict):
             if not messagebox.askyesno("Warning", "You haven't made any changes. "
                                                   "Are you sure you want to proceed?"):
@@ -253,7 +271,8 @@ class BaseForm:
 
 class CreateForm(BaseForm):
 
-    def create_file_form(self):
+    # Build custom File Form
+    def create_file_form(self, operation_type):
         self.master.minsize(420, 240)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -264,14 +283,16 @@ class CreateForm(BaseForm):
         self.create_entry_widget(self.first_frame, "Description Column Letter", 3, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "First Row", 4, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "Last Row", 5, 0, self.file_widgets)
-        tk.Button(self.first_frame, text="Submit", command=lambda: self.submit_file_data(self.file_data)).grid(row=5,
-                                                                                                               column=2,
-                                                                                                               padx=(
-                                                                                                                   0,
-                                                                                                                   10),
-                                                                                                               pady=7)
+        tk.Button(self.first_frame, text="Submit",
+                  command=lambda: self.submit_file_data(self.file_data, operation_type)).grid(row=5,
+                                                                                              column=2,
+                                                                                              padx=(
+                                                                                                  0,
+                                                                                                  10),
+                                                                                              pady=7)
 
-    def create_label_form(self):
+    # Build custom Label Form
+    def create_label_form(self, operation_type):
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -293,12 +314,15 @@ class CreateForm(BaseForm):
         self.create_checkbox_widget(self.second_frame, "Catalog Part", 2, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Kit Catalog", 3, 2, self.label_widgets)
 
-        tk.Button(self.second_frame, text="Submit", command=lambda: self.submit_label_data(self.label_data)).grid(
-            row=5, column=2, padx=(0, 10), pady=7, )
+        tk.Button(self.second_frame, text="Submit",
+                  command=lambda: self.submit_label_data(self.label_data, operation_type)).grid(row=5, column=2, padx=(0
+                                                                                        , 10), pady=7, )
 
 
 class OverwriteForm(BaseForm):
-    def create_file_form(self):
+
+    # Build custom File Form
+    def create_file_form(self, operation_type):
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -308,14 +332,16 @@ class OverwriteForm(BaseForm):
         self.create_entry_widget(self.first_frame, "Part Column Letter", 2, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "First Row", 3, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "Last Row", 4, 0, self.file_widgets)
-        tk.Button(self.first_frame, text="Submit", command=lambda: self.submit_file_data(self.file_data)).grid(row=4,
-                                                                                                               column=2,
-                                                                                                               padx=(
-                                                                                                                   0,
-                                                                                                                   10)
-                                                                                                               , pady=7)
+        tk.Button(self.first_frame, text="Submit",
+                  command=lambda: self.submit_file_data(self.file_data, operation_type)).grid(row=4,
+                                                                                              column=2,
+                                                                                              padx=(
+                                                                                                  0,
+                                                                                                  10)
+                                                                                              , pady=7)
 
-    def create_label_form(self):
+    # Build custom Label Form
+    def create_label_form(self, operation_type):
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -337,18 +363,19 @@ class OverwriteForm(BaseForm):
         self.create_checkbox_widget(self.second_frame, "Catalog Part", 2, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Kit Catalog", 3, 2, self.label_widgets)
 
-        tk.Button(self.second_frame, text="Submit", command=lambda: self.submit_label_data(self.label_data)).grid(row=5,
-                                                                                                                  column
-                                                                                                                  =2,
-                                                                                                                  padx=
-                                                                                                                  (0, 10
-                                                                                                                   ),
-                                                                                                                  pady=
-                                                                                                                  7)
+        tk.Button(self.second_frame, text="Submit", command=lambda: self.submit_label_data(self.label_data,
+                                                                                           operation_type)).grid(row=5,
+                                                                                                                 column=2,
+                                                                                                                 padx=(
+                                                                                                                     0,
+                                                                                                                     10),
+                                                                                                                 pady=7)
 
 
 class DeleteForm(BaseForm):
-    def create_file_form(self):
+
+    # Build custom File Form
+    def create_file_form(self, operation_type):
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -358,9 +385,5 @@ class DeleteForm(BaseForm):
         self.create_entry_widget(self.first_frame, "Part Column Letter", 2, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "First Row", 3, 0, self.file_widgets)
         self.create_entry_widget(self.first_frame, "Last Row", 4, 0, self.file_widgets)
-        tk.Button(self.first_frame, text="Submit", command=lambda: self.submit_file_data(self.file_data)).grid(row=4,
-                                                                                                               column=2,
-                                                                                                               padx=(
-                                                                                                                   0,
-                                                                                                                   10),
-                                                                                                               pady=7)
+        tk.Button(self.first_frame, text="Submit", command=lambda: self.submit_file_data(self.file_data, operation_type)
+                  ).grid(row=4, column=2, padx=(0, 10), pady=7)

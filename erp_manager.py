@@ -6,6 +6,8 @@ from pywinauto.keyboard import send_keys
 from pywinauto.timings import Timings
 from tkinter import messagebox
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
 import datetime
 from datetime import datetime
 import sys
@@ -42,10 +44,30 @@ class OperationType(Enum):
 
 class OperationLogger:
     def __init__(self):
-        self.workbook = Workbook()
-        self.sheet = self.workbook.active
-        self.sheet.title = "Operations Log"
-        self.sheet.append(["Operation", "Part Number", "Description", "Status", "Timestamp"])
+        self.filename = f"operations_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        if not os.path.exists(self.filename):
+            self.workbook = Workbook()
+            self.sheet = self.workbook.active
+            self.sheet.title = "Operations Log"
+
+            # Define column headers
+            headers = ["Operation", "Part Number", "Description", "Status", "Timestamp"]
+            self.sheet.append(headers)
+
+            # Make the first row bold
+            for cell in self.sheet[1]:
+                cell.font = Font(bold=True)
+
+            # Set column widths using the specified lengths
+            column_widths = [10, 12, 11, 11, 20]  # Using your specified lengths
+            for i, column_width in enumerate(column_widths, 1):
+                self.sheet.column_dimensions[get_column_letter(i)].width = column_width
+
+            self.save_workbook()
+        else:
+            self.workbook = load_workbook(self.filename)
+            self.sheet = self.workbook.active
 
     def log_operation(self, operation, part_number, description, status):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -53,13 +75,7 @@ class OperationLogger:
         self.save_workbook()
 
     def save_workbook(self):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"operations_log_{timestamp}.xlsx"
-        counter = 1
-        while os.path.exists(filename):
-            filename = f"operations_log_{timestamp}_{counter}.xlsx"
-            counter += 1
-        self.workbook.save(filename)
+        self.workbook.save(self.filename)
 
 
 class Operation(ABC):
@@ -77,14 +93,14 @@ class CreateOperation(Operation):
         if not reconnecting:
             print_fancy_separator("User Data")
             # Send message to user
-            print(f"File Data: {file_data}\nLabel Data: {label_data}\n")
-            print("Initializing Part Deletion...\n")
+            print(f"File Data: {file_data}\nLabel Data: {label_data}")
             print_fancy_separator("Program Documentation")
+            print("Initializing Part Creation...\n")
 
         try:
-            # Connect the application to Label Maintenance and send confirmation message
+            # Connect the application to Part Maintenance and send confirmation message
             app = Application(backend="uia").connect(title="Part Maintenance")
-            print('Connection to Part Maintenance achieved\n')
+            print('Connection to Part Maintenance achieved!\n')
 
             # Clear current information
             app.window(title='Part Maintenance').child_window(title="Clear").click_input()
@@ -178,11 +194,9 @@ class CreateOperation(Operation):
 
         except pywinauto.findwindows.ElementNotFoundError:
             print("Epicor Connection Failed...")
-            result = messagebox.askyesno("Connection Failed", "Part Maintenance not found...Reconnect?")
-            if result:
-                self.execute(file_data, label_data, True)
-            else:
-                sys.exit()
+            messagebox.showinfo("Connection Failed", "Part Maintenance not found. \nTerminating "
+                                                     "program...")
+            sys.exit()
         except pywinauto.timings.TimeoutError:
             messagebox.showerror("Error", "The program took too long to respond. Please restart")
         except Exception as e:
@@ -195,14 +209,14 @@ class OverwriteOperation(Operation):
         if not reconnecting:
             print_fancy_separator("User Data")
             # Send message to user
-            print(f"File Data: {file_data}\nLabel Data: {label_data}\n")
-            print("Initializing Part Deletion...\n")
+            print(f"File Data: {file_data}\nLabel Data: {label_data}")
             print_fancy_separator("Program Documentation")
+            print("Initializing Part Overwriting...\n")
 
         try:
-            # Connect the application to Label Maintenance and send confirmation message
+            # Connect the application to Part Maintenance and send confirmation message
             app = Application(backend="uia").connect(title="Part Maintenance")
-            print('Connection to Part Maintenance achieved')
+            print('Connection to Part Maintenance achieved\n')
 
             # Clear current information
             app.window(title='Part Maintenance').child_window(title="Clear").click_input()
@@ -245,11 +259,14 @@ class OverwriteOperation(Operation):
                 if label_data["Class"]:
                     main_window.child_window(auto_id="cbClass").type_keys(label_data["Class"], with_spaces=True)
                 if label_data["Label Group"]:
-                    main_window.child_window(auto_id="ucbLabelGroup").type_keys(label_data["Label Group"])
+                    main_window.child_window(auto_id="ucbLabelGroup").type_keys(label_data["Label Group"],
+                                                                                with_spaces=True)
                 if label_data["Reporting Group"]:
-                    main_window.child_window(auto_id="cboReportGroup").type_keys(label_data["Reporting Group"])
+                    main_window.child_window(auto_id="cboReportGroup").type_keys(label_data["Reporting Group"],
+                                                                                 with_spaces=True)
                 if label_data["On Hold Reason"]:
-                    main_window.child_window(auto_id="cbOnHoldReasonCode").type_keys(label_data["On Hold Reason"])
+                    main_window.child_window(auto_id="cbOnHoldReasonCode").type_keys(label_data["On Hold Reason"],
+                                                                                     with_spaces=True)
 
                 # Here, we use simple logic to determine whether a checkbox should be clicked
                 # Either the box is checked in our form and unchecked in Epicor or it's unchecked in our form and
@@ -282,24 +299,34 @@ class OverwriteOperation(Operation):
                         get_toggle_state() == 1):
                     main_window.child_window(auto_id="chkKitCatalog").click_input()
 
-                    # Save the form and check for any unexpected errors
-                    main_window.child_window(title="Save").click_input()
-                    if main_window.child_window(title="Error").exists():
-                        messagebox.showerror(
-                            "Error",
-                            "An error has occurred. Please try again."
-                        )
-                    operation_logger.log_operation("Overwrite", part_number, "n/a", "Completed")
-                    print(str(part_number) + " - Overwrite Complete")
-                    main_window.child_window(title="Clear").click_input()
+                # Save the form and check for any unexpected errors
+                main_window.child_window(title="Save").click_input()
+                if main_window.child_window(title="Error").exists():
+                    messagebox.showerror(
+                        "Error",
+                        "An error has occurred. Please try again."
+                    )
+
+                # Confirm saving
+                if main_window.child_window(title="Save Confirmation").exists():
+                    confirmation_dialog = main_window.child_window(title="Save Confirmation",
+                                                                   auto_id="EpiCheckMessageBox")
+                    yes_button = confirmation_dialog.child_window(title="Yes", auto_id="btnYes2", control_type="Button")
+                    yes_button.click_input()
+
+                # Log successful operation
+                operation_logger.log_operation("Overwrite", part_number, "n/a", "Completed")
+                print(str(part_number) + " - Overwrite Complete")
+
+                # Clear form
+                main_window.child_window(title="Clear").click_input()
+
 
         except pywinauto.findwindows.ElementNotFoundError as e:
             print("Epicor Connection Failed...")
-            result = messagebox.askyesno("Connection Failed", "Part Maintenance not found...Reconnect?")
-            if result:
-                self.execute(file_data, label_data, True)
-            else:
-                sys.exit()
+            messagebox.showinfo("Connection Failed", "Part Maintenance not found. \nTerminating "
+                                                     "program...")
+            sys.exit()
         except pywinauto.timings.TimeoutError:
             messagebox.showerror("Error", "The program took too long to respond. Please restart")
         except Exception as e:
@@ -312,15 +339,14 @@ class DeleteOperation(Operation):
         if not reconnecting:
             print_fancy_separator("User Data")
             # Send message to user
-            print(f"File Data: {file_data}\n")
+            print(f"File Data: {file_data}\nLabel Data: {label_data}")
             print_fancy_separator("Program Documentation")
             print("Initializing Part Deletion...\n")
 
-
         try:
-            # Connect the application to Label Maintenance and send confirmation message
+            # Connect the application to Part Maintenance and send confirmation message
             app = Application(backend="uia").connect(title="Part Maintenance")
-            print('Connection to Part Maintenance achieved')
+            print('Connection to Part Maintenance achieved\n')
 
             # Clear current information
             app.window(title='Part Maintenance').child_window(title="Clear").click_input()
@@ -349,8 +375,8 @@ class DeleteOperation(Operation):
                 if main_window.child_window(title="Add New Confirmation").exists():
                     main_window.child_window(auto_id='btnNo2').click_input()
                     operation_logger.log_operation("Delete", part_number, "n/a", "Incomplete - "
-                                                                                 "part doesn't exist and therefore can't"
-                                                                                 "be deleted")
+                                                                                 "part doesn't exist and therefore "
+                                                                                 "can't be deleted")
                     print(str(part_number) + " - Unable to delete: Part never existed")
                     continue
                 else:
@@ -362,11 +388,9 @@ class DeleteOperation(Operation):
 
         except pywinauto.findwindows.ElementNotFoundError:
             print("Epicor Connection Failed...")
-            result = messagebox.askyesno("Connection Failed", "Part Maintenance not found...Reconnect?")
-            if result:
-                self.execute(file_data, label_data, True)
-            else:
-                sys.exit()
+            messagebox.showinfo("Connection Failed", "Part Maintenance not found. \nTerminating "
+                                                     "program...")
+            sys.exit()
         except pywinauto.timings.TimeoutError:
             messagebox.showerror("Error", "The program took too long to respond. Please restart")
         except Exception as e:

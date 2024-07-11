@@ -1,5 +1,6 @@
-TYPE_OPTIONS = ["Manufactured", "Purchased", "Sales Kit"]
+TYPE_OPTIONS = ["", "Manufactured", "Purchased", "Sales Kit"]
 ON_HOLD_REASON_OPTIONS = [
+    "",
     "Engineering - In-Process",
     "Engineering prototype",
     "Engineering Review Needed",
@@ -13,6 +14,7 @@ ON_HOLD_REASON_OPTIONS = [
     "Part End of Life"
 ]
 GROUP_OPTIONS = [
+    "",
     "_COMP - Component parts",
     "_CSUP - Cust. Supplied",
     "_CUST - Custom parts",
@@ -52,6 +54,7 @@ GROUP_OPTIONS = [
     "_V1K-KIT"
 ]
 CLASS_OPTIONS = [
+    "",
     "_FG - Custom Products",
     "_FG - Distributed Products",
     "_FG - Electronic Products",
@@ -81,6 +84,7 @@ CLASS_OPTIONS = [
     "Winding Conductors"
 ]
 LABEL_GROUP_OPTIONS = [
+    "",
     "EHFB",
     "EHFT",
     "EPF",
@@ -112,6 +116,7 @@ LABEL_GROUP_OPTIONS = [
     "V1K"
 ]
 REPORTING_GROUP_OPTIONS = [
+    "",
     "_COMP - Component parts",
     "_CSUP - Cust. Supplied",
     "_CUST - Custom parts",

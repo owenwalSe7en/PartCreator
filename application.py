@@ -2,10 +2,15 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from erp_manager import OperationType
 from forms import CreateForm, OverwriteForm, DeleteForm
+import shutil
 
 
-# TODO: Must apply verifications on all inputs: verify excel file type, valid sheet name, column letters,
-#  and row numbers
+def print_fancy_separator(text="", char='-'):
+    terminal_width, _ = shutil.get_terminal_size()
+    if text:
+        text = f" {text} "
+    separator_width = (terminal_width - len(text)) // 2
+    print(f"{char * separator_width}{text}{char * separator_width}")
 
 
 class Application:
@@ -42,7 +47,7 @@ class Application:
     def open_form(self, form_class, operation_type):
         form_window = tk.Toplevel(self.root)
         form = form_class(form_window)
-        form.create_file_form()
+        form.create_file_form(operation_type)
         self.root.withdraw()  # Hide the main window
         self.root.wait_window(form_window)
 
@@ -50,6 +55,7 @@ class Application:
         if form.file_data and not form.is_terminated:
             try:
                 self.erp_manager.perform_operation(operation_type, form.file_data, form.label_data)
+                print_fancy_separator("Program Terminated")
                 messagebox.showinfo("Success", f"{operation_type.name} operation completed successfully.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
