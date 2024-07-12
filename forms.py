@@ -14,6 +14,17 @@ import re
 # region Validation Methods
 
 def sheet_exists(excel_file_path, sheet_name):
+    """
+    Check if a sheet exists in an Excel file.
+
+    :param excel_file_path: The path to the Excel file
+    :type excel_file_path: str
+    :param sheet_name: The name of the sheet to check
+    :type sheet_name: str
+
+    :return: True if the sheet exists, False otherwise
+    :rtype: bool
+    """
     try:
         workbook = openpyxl.load_workbook(excel_file_path)
         return sheet_name in workbook.sheetnames
@@ -31,13 +42,15 @@ def get_sheet_index(excel_file_path, sheet_name):
     """
     Get the index of a sheet in an Excel file.
 
-    Args:
-    excel_file_path (str): The file path of the Excel file.
-    sheet_name (str): The name of the sheet to find.
+    :param excel_file_path: The file path of the Excel file.
+    :type excel_file_path: str
+    :param sheet_name: The name of the sheet to find.
+    :type sheet_name: str
 
-    Returns:
-    int: The index of the sheet in the Excel file.
+    :return: The index of the sheet in the Excel file.
+    :rtype: int
     """
+
     try:
         workbook = openpyxl.load_workbook(excel_file_path)
         sheet_index = workbook.sheetnames.index(sheet_name)
@@ -54,6 +67,16 @@ def get_sheet_index(excel_file_path, sheet_name):
 
 
 def validate_file_location(file_path):
+    """
+    Validate the file location.
+
+    :param file_path: The path to the file
+    :type file_path: str
+
+    :return: True if the file location is valid, False otherwise
+    :rtype: bool
+    """
+
     # Check if the file path is not empty
     if not file_path:
         return False
@@ -70,6 +93,16 @@ def validate_file_location(file_path):
 
 
 def is_file_open(filepath):
+    """
+    Checks if the file is open.
+
+    :param filepath: The path to the file
+    :type filepath: file
+
+    :return: True if the file is currently open. False if it isn't
+    :rtype: bool
+    """
+
     try:
         os.rename(filepath, filepath)  # Attempt to rename the file to itself
         return False  # File is not open
@@ -78,7 +111,21 @@ def is_file_open(filepath):
 
 
 def is_valid_row_combo(first_row, last_row):
+    """
+    Checks if the inputs are valid rows and a valid row combination
+
+    :param first_row: The first row of the part number list
+    :type first_row: int
+    :param last_row:  The last row of the part number list
+    :type last_row: int
+
+    :return: True if the rows are individually valid and a valid combination. False if any one of those is not true
+    :rtype: bool
+    """
+
+    # Check if both are valid integers
     if is_valid_integer(first_row) and is_valid_integer(last_row):
+        # Check if the first row is less than the last row
         if int(first_row) < int(last_row):
             return True
         else:
@@ -88,14 +135,38 @@ def is_valid_row_combo(first_row, last_row):
 
 
 def is_valid_column(column):
+    """
+    Check if the input is a valid column
+
+    :param column: A letter representing a column of an Excel spreadsheet
+    :type column: str
+
+    :return: True if the column letter is a letter or combination of letters. False if invalid
+    """
+
     return re.match(r'^[A-Za-z]+$', column)
 
 
 def is_valid_integer(var):
+    """
+    Checks if input is a valid integer
+
+    :param var: A number representing a row in and Excel spreadsheet
+    :type var: int
+
+    :return: True if var is a valid integer. False if var is not a valid integer
+    """
+
     return isinstance(var, str) and var.isdigit()
 
 
 def browse_file(var):
+    """
+    Sets the selected file path to the given `var`.
+
+    :param var: tkinter variable to store the selected file path
+    """
+
     file_path = filedialog.askopenfilename()
     var.set(file_path)
 
@@ -105,21 +176,37 @@ def browse_file(var):
 
 class BaseForm:
     def __init__(self, master):
-        # tkinter variables and configuration
-        self.master = master
-        self.master.title("Create Part")
-        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+        """
+        Initialize the BaseForm class and the master tkinter form
 
-        # Misc variables
-        self.file_data = {}
-        self.label_data = {}
-        self.file_widgets = []
-        self.label_widgets = []
-        self.small_font = tkfont.Font(size=12)
-        self.is_terminated = False
+        :param master: The master widget (usually a Tk instance) for the form.
+        :type master: tk.Tk
+        """
+        self.master = master  # Set the master widget
+        self.master.title("Create Part")  # Set the title of the form
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)  # Define the protocol for closing the window
+
+        # Initialize miscellaneous variables
+        self.file_data = {}  # Dictionary to store file-related data
+        self.label_data = {}  # Dictionary to store label-related data
+        self.file_widgets = []  # List to hold file-related widgets
+        self.label_widgets = []  # List to hold label-related widgets
+        self.small_font = tkfont.Font(size=12)  # Define a small font for the form
+        self.is_terminated = False  # Flag to track if the form is terminated
 
     # region Widget Creation
     def create_entry_widget(self, frame, label, row, col, arr, var_type=tk.StringVar):
+        """
+        Creates a label and an adjacent textbox into the given frame at a specified row/column combination
+
+        :param frame: The frame where controls are placed
+        :param label: The text value of the label
+        :param row: The row in which both the label and the textbox will be placed
+        :param col: The column in which the label will be placed (the textbox is placed one column to the right)
+        :param arr: The array where the widgets will be listed
+        :param var_type: The type of variable that will be passed, in combination with the label, as the value to arr
+        :return: None
+        """
 
         label_widget = ttk.Label(frame, text=label, width=22, anchor='w', font=self.small_font)
         label_widget.grid(row=row, column=col, padx=(0, 10), pady=7, sticky='w')
@@ -131,6 +218,20 @@ class BaseForm:
         arr.append((label, var))
 
     def create_file_widget(self, frame, label, row, col, arr, var_type=tk.StringVar):
+        """
+        Creates a label, an adjacent textbox, and an adjacent button into the given frame at a specified
+        row/column combination. The button will allow users to enter File Explorer and the file they choose will
+        become the value within the textbox.
+
+        :param frame: The frame where controls are placed
+        :param label: The text value of the label
+        :param row: The row in which the label, textbox, and button will be placed
+        :param col: The column in which the label will be placed (the textbox is placed one column to the right and the
+        button is placed two columns to the right)
+        :param arr: The array where the widgets will be listed
+        :param var_type: The type of variable that will be passed, in combination with the label, as the value to arr
+        :return: None
+        """
 
         label_widget = ttk.Label(frame, text=label, width=20, anchor='w', font=self.small_font)
         label_widget.grid(row=row, column=col, padx=(0, 10), pady=7, sticky='w')
@@ -145,6 +246,20 @@ class BaseForm:
         arr.append((label, var))
 
     def create_dropdown_widget(self, frame, label, width, options, row, col, arr, var_type=tk.StringVar):
+        """
+        Creates a label and an adjacent dropdown menu into the given frame at a specified row/column combination
+
+        :param frame: The frame where controls are placed
+        :param label: The text value of the label
+        :param width: The width of the dropdown menu
+        :param options: The choices within the dropdown menu
+        :param row: The row in which both the label and the dropdown menu will be placed
+        :param col: The column in which the label will be placed (the dropdown menu is placed one column to the right)
+        :param arr: The array where the widgets will be listed
+        :param var_type: The type of variable that will be passed, in combination with the label, as the value to arr
+        :return: None
+        """
+
         label_widget = ttk.Label(frame, text=label, width=20, anchor='w', font=self.small_font)
         label_widget.grid(row=row, column=col, padx=(0, 10), pady=7, sticky='w')
 
@@ -156,6 +271,18 @@ class BaseForm:
         arr.append((label, var))
 
     def create_checkbox_widget(self, frame, label, row, col, arr, var_type=tk.BooleanVar):
+        """
+        Creates a checkbox and assigns it to a specific row/col combination in the grid
+
+        :param frame: The frame where controls are placed
+        :param label: The label next to the checkbox
+        :param row: The row in which the checkbox will be placed
+        :param col: The column in which the checkbox will be placed
+        :param arr: The array where the widgets will be listed
+        :param var_type: :param var_type: The type of variable that will be passed, in combination with the label,
+         as the value to arr
+        :return:
+        """
         var = var_type()  # Create a BooleanVar instance that updates when the checkbox state is changed
 
         checkbox = ttk.Checkbutton(frame, text=label, variable=var)
@@ -166,20 +293,48 @@ class BaseForm:
     # endregion
 
     def on_closing(self):
+        """
+        Sends a messagebox to the user confirming the termination of the program
+
+        :return: None
+        """
+
         if messagebox.askokcancel("Quit", "Do you want to quit the program?"):
             self.is_terminated = True
             self.master.destroy()
             sys.exit()
 
     def create_file_form(self, operation_type):
+        """
+        This method should be overridden by subclasses to implement specific logic
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        """
         # To be implemented by subclasses
         pass
 
     def create_label_form(self, operation_type):
+        """
+        This method should be overridden by subclasses to implement specific logic
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        """
         # To be implemented by subclasses
         pass
 
     def submit_file_data(self, target_dict, operation_type):
+        """
+        Validates data collected from the File Information form and creates the Label Information form if operation_type
+        isn't DELETE.
+
+        :param target_dict: The dictionary containing all the data collected from the File Information form
+        :type target_dict: dict
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
         for label, var in self.file_widgets:
             if var.get().strip() == "":
                 messagebox.showerror("Error", "There are missing fields in the current form")
@@ -234,19 +389,25 @@ class BaseForm:
             self.master.destroy()
 
     def submit_label_data(self, target_dict, operation_type):
-        # Variable that checks for the CREATE operation type
-        # This type should not have any empty spaces
-        is_create_operation = False
+        """
+        Validates data collected from the Label Information form and terminates the self.master form
+
+        :param target_dict: The dictionary containing all the data collected from the File Information form
+        :type target_dict: dict
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
+
+        is_create_operation = False   # Variable that checks for the CREATE operation type
         if operation_type.name == "CREATE":
             is_create_operation = True
 
-        # Variable that counts the amount of total empty fields
-        empty_fields = 0
-        # Variable that counts the amount of empty dropdown fields
-        empty_dropdown_fields = 0
+        empty_fields = 0   # Variable that counts the amount of total empty fields
+        empty_dropdown_fields = 0   # Variable that counts the amount of empty dropdown fields
 
         for label, var in self.label_widgets:
-            if var.get() == "" or var.get() == False:
+            if var.get() == "" or var.get() is False:
                 empty_fields += 1
 
             if var.get() == "":
@@ -273,6 +434,14 @@ class CreateForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        """
+        Creates the File Information form using the CREATE operation type and links the form data to self.submit_file_data
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
+
         self.master.title("File Information - Create")
         self.master.minsize(420, 240)
         self.first_frame = ttk.Frame(self.master, padding="10")
@@ -294,6 +463,15 @@ class CreateForm(BaseForm):
 
     # Build custom Label Form
     def create_label_form(self, operation_type):
+        """
+        Creates the Label Information form using the CREATE operation type and links the form data to
+        self.submit_label_data
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
+
         self.master.title("Label Information - Create")
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -324,6 +502,14 @@ class OverwriteForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        """
+        Creates the File Information form using the OVERWRITE operation type and links the form data to self.submit_file_data
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
+
         self.master.title("File Information - Overwrite")
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")
@@ -344,6 +530,15 @@ class OverwriteForm(BaseForm):
 
     # Build custom Label Form
     def create_label_form(self, operation_type):
+        """
+        Creates the Label Information form using the OVERWRITE operation type and links the form data to
+        self.submit_label_data
+
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :return: None
+        """
+
         self.master.title("Label Information - Overwrite")
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -378,6 +573,13 @@ class DeleteForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        """
+        Creates the File Information form using the DELETE operation type and links the form data to self.submit_file_data
+
+        :param operation_type: The type of specified operation (CREATE, OVERWRITE, or DELETE)
+        :return: None
+        """
+
         self.master.title("File Information - Delete")
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")

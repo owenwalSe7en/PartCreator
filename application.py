@@ -6,6 +6,14 @@ import shutil
 
 
 def print_fancy_separator(text="", char='-'):
+    """
+    This function generates a visually appealing separator in the terminal.
+
+    :param text: The text to be centered within the separator. Default is an empty string.
+    :param char: The character used to build the separator. Default is '-'.
+    :return: None
+    """
+
     terminal_width, _ = shutil.get_terminal_size()
     if text:
         text = f" {text} "
@@ -15,13 +23,24 @@ def print_fancy_separator(text="", char='-'):
 
 class Application:
     def __init__(self, erp_manager):
+        """
+        Initializes the Application class instance, an instance of the ERPManager, and the original tkinter root
+
+        :param erp_manager: An instance of the ERPManager class
+        """
+
         self.erp_manager = erp_manager
         self.root = tk.Tk()
-        self.root.title("ERP Part Manager")
+        self.root.title("Operation Selection")
         self.root.geometry("650x170")
         self.root.minsize(650, 170)
 
     def create_ui(self):
+        """
+        Configures the operation selection form to have 3 buttons each of which correspond with a specific OperationType
+
+        :return: None
+        """
         style = ttk.Style()
         style.configure('TButton', font=('Arial', 14))
         style.configure('TLabel', font=('Arial', 18))
@@ -45,9 +64,20 @@ class Application:
                    style='Tall.TButton', width=15).pack(side=tk.LEFT, padx=10)
 
     def open_form(self, form_class, operation_type):
+        """
+        Creates the File Information form which leads to the collection of all user data in both File Information
+        and Label Information. Verifies that the user data exist and then executes the specific looping method that
+        cooresponds to a specific Operation subclass in erp_manager.
+
+        :param form_class: The specific form of use (CreateForm, OverwriteForm, or DeleteForm)
+        :param operation_type: The specific operation type (OperationType.Create, OperationType.OVERWRITE, or
+        OperationType.DELETE)
+        :raises: Any error that gets caught during the execute method
+        """
+
         form_window = tk.Toplevel(self.root)
         form = form_class(form_window)
-        form.create_file_form(operation_type)
+        form.create_file_form(operation_type)  # Create the File Information form
         self.root.withdraw()  # Hide the main window
         self.root.wait_window(form_window)
 
@@ -63,5 +93,10 @@ class Application:
         self.root.quit()
 
     def run(self):
+        """
+        Run the UI
+
+        :return: None
+        """
         self.create_ui()
         self.root.mainloop()

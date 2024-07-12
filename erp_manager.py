@@ -18,6 +18,14 @@ import shutil
 # TODO: Work on the reconnecting feature and make sure it is tested and has zero bugs
 
 def print_fancy_separator(text="", char='-'):
+    """
+    This function generates a visually appealing separator in the terminal.
+
+    :param text: The text to be centered within the separator. Default is an empty string.
+    :param char: The character used to build the separator. Default is '-'.
+    :return: None
+    """
+
     terminal_width, _ = shutil.get_terminal_size()
     if text:
         text = f" {text} "
@@ -34,16 +42,22 @@ class OperationType(Enum):
     OVERWRITE = 2
     DELETE = 3
 
-    @classmethod
-    def initialize_workbook(cls):
-        cls.workbook = Workbook()
-        cls.sheet = cls.workbook.active
-        cls.sheet.title = "Operations Log"
-        cls.sheet.append(["Operation", "Part Number", "Description", "Status"])
-
 
 class OperationLogger:
     def __init__(self):
+        """
+            Initializes the OperationLogger class instance.
+
+            If the operations log file does not exist, a new workbook is created with predefined settings:
+            - Filename is generated with the current date and time.
+            - Workbook, active sheet, and sheet title are initialized.
+            - Column headers for 'Operation', 'Part Number', 'Description', 'Status', and 'Timestamp' are defined.
+            - The first row is made bold.
+            - Column widths set based on specified lengths.
+
+            If the operations log file already exists, it loads the existing workbook and sets the active sheet.
+            """
+
         self.filename = f"operations_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
         if not os.path.exists(self.filename):
@@ -70,17 +84,45 @@ class OperationLogger:
             self.sheet = self.workbook.active
 
     def log_operation(self, operation, part_number, description, status):
+        """
+        Write in the operation, part number, description, and status into a pre-made Excel spreadsheet
+
+        :param operation: The specific operation being performed
+        :type operation: str
+        :param part_number: The specific part number being logged
+        :type part_number: str
+        :param description: The specific description being logged. If overwriting/deleting description is n/a.
+        :param status: The status of the operation (Complete/Incomplete) and why
+
+        :return: None
+        """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.sheet.append([operation, part_number, description, status, timestamp])
         self.save_workbook()
 
     def save_workbook(self):
+        """
+        Saves workbook
+        :return: None
+        """
         self.workbook.save(self.filename)
 
 
 class Operation(ABC):
     @abstractmethod
-    def execute(self, file_data, label_data, reconnecting):
+    def execute(self, file_data, label_data):
+        """
+        This method is an abstract method that must be implemented by subclasses.
+
+        :param file_data: A dictionary containing user data related to the file information form
+        :type file_data: dict
+        :param label_data: A dictionary containing user data related to the label information form
+        :type label_data: dict
+
+        This method serves as a template for executing specific operations. Subclasses of the 'Operation' class
+        must implement this method to define the behavior of the operation they represent. It takes in 'file_data'
+        and 'label_data' as parameters, which provide the necessary information for carrying out the operation.
+        """
         pass
 
 
@@ -89,13 +131,29 @@ operation_logger = OperationLogger()
 
 
 class CreateOperation(Operation):
-    def execute(self, file_data, label_data, reconnecting):
-        if not reconnecting:
-            print_fancy_separator("User Data")
-            # Send message to user
-            print(f"File Data: {file_data}\nLabel Data: {label_data}")
-            print_fancy_separator("Program Documentation")
-            print("Initializing Part Creation...\n")
+    def execute(self, file_data, label_data):
+        """
+        Execute method specific to the CreateOperation subclass.
+
+        :param file_data: A dictionary containing user data related to the file information form
+        :type file_data: dict
+        :param label_data: A dictionary containing user data related to the label information form
+        :type label_data: dict
+
+        This method is implemented in the CreateOperation subclass to carry out the create operation. It takes in 'file_data'
+        and 'label_data' as parameters, providing the necessary information for creating parts in the system.
+        The method first establishes a connection to the Part Maintenance application, clears current information,
+        loads the user-provided workbook, and loops through the part numbers to overwrite them. If a part number is null,
+        it logs an incomplete operation. If the part doesn't exist, it logs that the creation cannot be performed.
+        If the part exists, it proceeds with the creating process by confirming in Epicor.
+        Upon successful overwriting, it logs the completion of the operation.
+        """
+
+        # Print messages and separators to the console
+        print_fancy_separator("User Data")
+        print(f"File Data: {file_data}\nLabel Data: {label_data}")
+        print_fancy_separator("Program Documentation")
+        print("Initializing Part Deletion...\n")
 
         try:
             # Connect the application to Part Maintenance and send confirmation message
@@ -213,13 +271,29 @@ class CreateOperation(Operation):
 
 
 class OverwriteOperation(Operation):
-    def execute(self, file_data, label_data, reconnecting):
-        if not reconnecting:
-            print_fancy_separator("User Data")
-            # Send message to user
-            print(f"File Data: {file_data}\nLabel Data: {label_data}")
-            print_fancy_separator("Program Documentation")
-            print("Initializing Part Overwriting...\n")
+    def execute(self, file_data, label_data):
+        """
+        Execute method specific to the OverwriteOperation subclass.
+
+        :param file_data: A dictionary containing user data related to the file information form
+        :type file_data: dict
+        :param label_data: A dictionary containing user data related to the label information form
+        :type label_data: dict
+
+        This method is implemented in the OverwriteOperation subclass to carry out the overwriting operation. It takes in 'file_data'
+        and 'label_data' as parameters, providing the necessary information for overwriting parts in the system.
+        The method first establishes a connection to the Part Maintenance application, clears current information,
+        loads the user-provided workbook, and loops through the part numbers to overwrite them. If a part number is null,
+        it logs an incomplete operation. If the part doesn't exist, it logs that the overwriting cannot be performed.
+        If the part exists, it proceeds with the overwriting process by confirming the edit in Epicor.
+        Upon successful overwriting, it logs the completion of the operation.
+        """
+
+        # Print messages and separators to the console
+        print_fancy_separator("User Data")
+        print(f"File Data: {file_data}\nLabel Data: {label_data}")
+        print_fancy_separator("Program Documentation")
+        print("Initializing Part Deletion...\n")
 
         try:
             # Connect the application to Part Maintenance and send confirmation message
@@ -343,13 +417,29 @@ class OverwriteOperation(Operation):
 
 
 class DeleteOperation(Operation):
-    def execute(self, file_data, label_data, reconnecting):
-        if not reconnecting:
-            print_fancy_separator("User Data")
-            # Send message to user
-            print(f"File Data: {file_data}\nLabel Data: {label_data}")
-            print_fancy_separator("Program Documentation")
-            print("Initializing Part Deletion...\n")
+    def execute(self, file_data, label_data):
+        """
+        Execute method specific to the DeleteOperation subclass.
+
+        :param file_data: A dictionary containing user data related to the file information form
+        :type file_data: dict
+        :param label_data: A dictionary containing user data related to the label information form
+        :type label_data: dict
+
+        This method is implemented in the DeleteOperation subclass to carry out the deletion operation. It takes in 'file_data'
+        and 'label_data' as parameters, providing the necessary information for deleting parts in the system.
+        The method first establishes a connection to the Part Maintenance application, clears current information,
+        loads the user-provided workbook, and loops through the part numbers to delete them. If a part number is null,
+        it logs an incomplete operation. If the part doesn't exist, it logs that the deletion cannot be performed.
+        If the part exists, it proceeds with the deletion process by confirming the deletion in Epicor.
+        Upon successful deletion, it logs the completion of the operation.
+        """
+
+        # Print messages and separators to the console
+        print_fancy_separator("User Data")
+        print(f"File Data: {file_data}\nLabel Data: {label_data}")
+        print_fancy_separator("Program Documentation")
+        print("Initializing Part Deletion...\n")
 
         try:
             # Connect the application to Part Maintenance and send confirmation message
@@ -416,6 +506,17 @@ class DeleteOperation(Operation):
 
 class ERPManager:
     def __init__(self, create_op: Operation, overwrite_op: Operation, delete_op: Operation):
+        """
+        Initializes an instance of the ERPManager class with operations for create, overwrite, and delete
+
+        :param create_op: Operation object for the CREATE operation
+        :param overwrite_op: Operation object for the OVERWRITE operation
+        :param delete_op: Operation object for the DELETE operation
+
+        This method sets up a dictionary 'operations' where keys are OperationType enums
+        (CREATE, OVERWRITE, DELETE) and values are the corresponding operation objects.
+        """
+
         self.operations = {
             OperationType.CREATE: create_op,
             OperationType.OVERWRITE: overwrite_op,
@@ -423,8 +524,22 @@ class ERPManager:
         }
 
     def perform_operation(self, op_type: OperationType, form_data, label_data):
+        """
+        Perform the specified operation based on the given operation type.
+
+        :param op_type: The type of operation to be performed (CREATE, OVERWRITE, DELETE)
+        :type op_type: OperationType
+        :param form_data: Data related to the form for the operation
+        :param label_data: Data related to the labels for the operation
+
+        :raises ValueError: If the provided operation type is not valid
+
+        This method retrieves the operation based on the operation type from the 'operations' dictionary
+        in the ERPManager instance and executes the operation with the provided form_data and label_data.
+        If the operation type is not found in the dictionary, a ValueError is raised.
+        """
         operation = self.operations.get(op_type)
         if operation:
-            operation.execute(form_data, label_data, False)
+            operation.execute(form_data, label_data)
         else:
             raise ValueError("Invalid operation type")
