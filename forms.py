@@ -273,6 +273,7 @@ class CreateForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        self.master.title("File Information - Create")
         self.master.minsize(420, 240)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -293,6 +294,7 @@ class CreateForm(BaseForm):
 
     # Build custom Label Form
     def create_label_form(self, operation_type):
+        self.master.title("Label Information - Create")
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -312,7 +314,6 @@ class CreateForm(BaseForm):
         self.create_checkbox_widget(self.second_frame, "Priced Part", 0, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Salesforce Sync", 1, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Catalog Part", 2, 2, self.label_widgets)
-        self.create_checkbox_widget(self.second_frame, "Kit Catalog", 3, 2, self.label_widgets)
 
         tk.Button(self.second_frame, text="Submit",
                   command=lambda: self.submit_label_data(self.label_data, operation_type)).grid(row=5, column=2, padx=(0
@@ -323,6 +324,7 @@ class OverwriteForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        self.master.title("File Information - Overwrite")
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -342,6 +344,7 @@ class OverwriteForm(BaseForm):
 
     # Build custom Label Form
     def create_label_form(self, operation_type):
+        self.master.title("Label Information - Overwrite")
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -361,7 +364,6 @@ class OverwriteForm(BaseForm):
         self.create_checkbox_widget(self.second_frame, "Priced Part", 0, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Salesforce Sync", 1, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Catalog Part", 2, 2, self.label_widgets)
-        self.create_checkbox_widget(self.second_frame, "Kit Catalog", 3, 2, self.label_widgets)
 
         tk.Button(self.second_frame, text="Submit", command=lambda: self.submit_label_data(self.label_data,
                                                                                            operation_type)).grid(row=5,
@@ -376,6 +378,7 @@ class DeleteForm(BaseForm):
 
     # Build custom File Form
     def create_file_form(self, operation_type):
+        self.master.title("File Information - Delete")
         self.master.minsize(410, 200)
         self.first_frame = ttk.Frame(self.master, padding="10")
         self.first_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))

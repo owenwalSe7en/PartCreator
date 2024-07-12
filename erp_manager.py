@@ -127,11 +127,26 @@ class CreateOperation(Operation):
                 main_window.child_window(auto_id='tbPart').type_keys(part_number)
                 send_keys("{TAB}")
 
+                # Validate that part number is not None
+                if part_number is None:
+                    operation_logger.log_operation("Create", str(part_number), part_description,
+                                                   "Incomplete: part number was null")
+                    print(str(part_number) + " - Unable to create: Part number is null")
+                    main_window.child_window(auto_id='btnNo2').click_input()
+                    continue
+
                 # Confirm that the part does not already exist
                 if main_window.child_window(title="Add New Confirmation").exists():
                     main_window.child_window(auto_id='btnYes2').click_input()
-                    operation_logger.log_operation("Create", str(part_number), part_description, "Completed")
-                    print(str(part_number) + " - Part Created")
+                    # Validate that part description is not None
+                    if part_description is None:
+                        operation_logger.log_operation("Create", str(part_number), part_description,
+                                                       "Completed with empty description")
+                        print(str(part_number) + " - Part Created   **No Description**")
+                    else:
+                        operation_logger.log_operation("Create", str(part_number), part_description,
+                                                       "Completed")
+                        print(str(part_number) + " - Part Created")
                 else:
                     # Write PN into Excel file
                     operation_logger.log_operation("Create", str(part_number), part_description,
@@ -174,13 +189,6 @@ class CreateOperation(Operation):
                 elif (not label_data["Catalog Part"] and main_window.child_window(auto_id="chkCatalogPart").
                         get_toggle_state() == 1):
                     main_window.child_window(auto_id="chkCatalogPart").click_input()
-
-                if (label_data["Kit Catalog"] and main_window.child_window(auto_id="chkKitCatalog").
-                        get_toggle_state() == 0):
-                    main_window.child_window(auto_id="chkKitCatalog").click_input()
-                elif (not label_data["Kit Catalog"] and main_window.child_window(auto_id="chkKitCatalog").
-                        get_toggle_state() == 1):
-                    main_window.child_window(auto_id="chkKitCatalog").click_input()
 
                 # Save the form and check for any unexpected errors
                 main_window.child_window(title="Save").click_input()
@@ -241,6 +249,14 @@ class OverwriteOperation(Operation):
                 main_window.child_window(auto_id='tbPart').type_keys(part_number)
                 send_keys("{TAB}")
 
+                # Validate that part number is not None
+                if part_number is None:
+                    operation_logger.log_operation("Create", str(part_number), "n/a",
+                                                   "Incomplete: part number was null")
+                    print(str(part_number) + " - Unable to overwrite: Part number is null")
+                    main_window.child_window(auto_id='btnNo2').click_input()
+                    continue
+
                 # Confirm that the part already exist
                 if main_window.child_window(title="Add New Confirmation").exists():
                     main_window.child_window(auto_id='btnNo2').click_input()
@@ -292,13 +308,6 @@ class OverwriteOperation(Operation):
                         get_toggle_state() == 1):
                     main_window.child_window(auto_id="chkCatalogPart").click_input()
 
-                if (label_data["Kit Catalog"] and main_window.child_window(auto_id="chkKitCatalog").
-                        get_toggle_state() == 0):
-                    main_window.child_window(auto_id="chkKitCatalog").click_input()
-                elif (not label_data["Kit Catalog"] and main_window.child_window(auto_id="chkKitCatalog").
-                        get_toggle_state() == 1):
-                    main_window.child_window(auto_id="chkKitCatalog").click_input()
-
                 # Save the form and check for any unexpected errors
                 main_window.child_window(title="Save").click_input()
                 if main_window.child_window(title="Error").exists():
@@ -320,7 +329,6 @@ class OverwriteOperation(Operation):
 
                 # Clear form
                 main_window.child_window(title="Clear").click_input()
-
 
         except pywinauto.findwindows.ElementNotFoundError as e:
             print("Epicor Connection Failed...")
@@ -370,6 +378,14 @@ class DeleteOperation(Operation):
                 # Type cell value into text box
                 main_window.child_window(auto_id='tbPart').type_keys(part_number)
                 send_keys("{TAB}")
+
+                # Validate that part number is not None
+                if part_number is None:
+                    operation_logger.log_operation("Create", str(part_number), "n/a",
+                                                   "Incomplete: part number was null")
+                    print(str(part_number) + " - Unable to delete: Part number is null")
+                    main_window.child_window(auto_id='btnNo2').click_input()
+                    continue
 
                 # Confirm that the part already exist
                 if main_window.child_window(title="Add New Confirmation").exists():
