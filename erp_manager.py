@@ -15,8 +15,6 @@ import os
 import shutil
 
 
-# TODO: Work on the reconnecting feature and make sure it is tested and has zero bugs
-
 def print_fancy_separator(text="", char='-'):
     """
     This function generates a visually appealing separator in the terminal.

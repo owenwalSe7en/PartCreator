@@ -4,14 +4,50 @@ from tkinter import ttk, filedialog, messagebox
 from combobox_options import (TYPE_OPTIONS, CLASS_OPTIONS, REPORTING_GROUP_OPTIONS,
                               ON_HOLD_REASON_OPTIONS, GROUP_OPTIONS, LABEL_GROUP_OPTIONS)
 from openpyxl import Workbook, load_workbook
-from openpyxl.utils import get_column_letter, exceptions
+from openpyxl.utils import get_column_letter, exceptions, column_index_from_string
 import openpyxl
 import sys
 import os
 import re
+import msvcrt
+import gc
 
 
 # region Validation Methods
+
+def check_empty_rows(file_path, sheet_index, column, row_start, row_end):
+    workbook = None
+    try:
+        workbook = openpyxl.load_workbook(file_path, read_only=True, keep_vba=False, data_only=True)
+
+        if sheet_index < 0 or sheet_index >= len(workbook.sheetnames):
+            raise ValueError(
+                f"Sheet index {sheet_index} is out of range. The workbook has {len(workbook.sheetnames)} sheets.")
+
+        sheet = workbook.worksheets[sheet_index]
+        empty_rows = []
+
+        # Convert column reference to index if it's a string
+        column = column_index_from_string(column) if isinstance(column, str) else column
+
+        # Ensure row_start and row_end are within the sheet's range
+        max_row = sheet.max_row
+        row_start = max(1, min(row_start, max_row))
+        row_end = min(row_end, max_row)
+
+        for row in range(row_start, row_end + 1):
+            cell_value = sheet.cell(row=row, column=column).value
+
+            if cell_value is None or cell_value == "":
+                empty_rows.append(row)
+
+        return empty_rows
+
+    finally:
+        if workbook:
+            workbook.close()
+        gc.collect()  # Force garbage collection
+
 
 def sheet_exists(excel_file_path, sheet_name):
     """
@@ -92,22 +128,26 @@ def validate_file_location(file_path):
     return True
 
 
-def is_file_open(filepath):
-    """
-    Checks if the file is open.
-
-    :param filepath: The path to the file
-    :type filepath: file
-
-    :return: True if the file is currently open. False if it isn't
-    :rtype: bool
-    """
-
+def is_file_open(file_path):
     try:
-        os.rename(filepath, filepath)  # Attempt to rename the file to itself
-        return False  # File is not open
-    except OSError as e:
-        return True  # File is open
+        # Try to open the file in read-write mode
+        with open(file_path, 'r+b') as f:
+            # Try to acquire a lock on the file
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            # If we got here, the file wasn't locked
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        return False
+    except IOError:
+        # If we got an IOError, the file is likely open by another process
+        return True
+    except WindowsError as e:
+        # Windows-specific errors
+        if e.winerror == 32:  # ERROR_SHARING_VIOLATION
+            return True
+        elif e.winerror == 33:  # ERROR_LOCK_VIOLATION
+            return True
+        else:
+            raise  # Re-raise any other Windows errors
 
 
 def is_valid_row_combo(first_row, last_row):
@@ -335,6 +375,7 @@ class BaseForm:
         OperationType.DELETE)
         :return: None
         """
+
         for label, var in self.file_widgets:
             if var.get().strip() == "":
                 messagebox.showerror("Error", "There are missing fields in the current form")
@@ -379,6 +420,26 @@ class BaseForm:
         if not is_valid_row_combo(target_dict["First Row"], target_dict["Last Row"]):
             messagebox.showerror("Error", "Invalid row or row combination")
             return
+
+        # Validate that each column has no empty cells
+        empty_rows = check_empty_rows(target_dict['Input File'], target_dict['Sheet Index'],
+                                      target_dict['Part Column Letter'], int(target_dict['First Row']),
+                                      int(target_dict['Last Row']))
+        if len(empty_rows) > 0:
+            messagebox.showerror("Error", f"There are empty cells in column "
+                                          f"{target_dict['Part Column Letter']}. Please remove them and try again.")
+            return
+
+        if 'Description Column Letter' in target_dict:
+            empty_rows.clear()
+            empty_rows = check_empty_rows(target_dict['Input File'], target_dict['Sheet Index'],
+                                          target_dict['Description Column Letter'], int(target_dict['First Row']),
+                                          int(target_dict['Last Row']))
+            if len(empty_rows) > 0:
+                messagebox.showerror("Error", f"There are empty cells in column "
+                                              f"{target_dict['Description Column Letter']}. "
+                                              f"Please remove them and try again.")
+                return
 
         # Verify the current subclass isn't DeleteForm
         class_name = type(self).__name__
