@@ -2,7 +2,6 @@ from erp_manager import ERPManager, CreateOperation, OverwriteOperation, DeleteO
 from application import Application
 
 
-# Your existing imports and code here...
 if __name__ == "__main__":
     try:
         # Start the program
