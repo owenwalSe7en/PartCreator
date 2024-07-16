@@ -11,11 +11,21 @@ import re
 import msvcrt
 import gc
 
-# TODO: Add comments to any methods that don't have them
 
 # region Validation Methods
 
 def check_empty_rows(file_path, sheet_index, column, row_start, row_end):
+    """
+    Checks for empty rows in a specified column for a specified range of rows
+
+    :param file_path: The file containing the sheet and column the user intends to check
+    :param sheet_index: The index of the sheet within the file_path parameter
+    :param column: The specified column
+    :param row_start: The first row the program should check
+    :param row_end: The last row the program should check
+    :return: A list of the rows that were empty
+    """
+
     workbook = None
     try:
         workbook = openpyxl.load_workbook(file_path, read_only=True, keep_vba=False, data_only=True)
@@ -167,7 +177,11 @@ def is_valid_row_combo(first_row, last_row):
     if is_valid_integer(first_row) and is_valid_integer(last_row):
         # Check if the first row is less than the last row
         if int(first_row) < int(last_row):
-            return True
+            # Check if more than 150 parts are being created
+            if int(last_row) - int(first_row) < 150:
+                return True
+            else:
+                return False
         else:
             return False
     else:
@@ -418,7 +432,7 @@ class BaseForm:
 
         # Validate row order
         if not is_valid_row_combo(target_dict["First Row"], target_dict["Last Row"]):
-            messagebox.showerror("Error", "Invalid row or row combination")
+            messagebox.showerror("Error", "Invalid row or row combination. Max row count of 150")
             return
 
         # Validate that each column has no empty cells
@@ -460,12 +474,12 @@ class BaseForm:
         :return: None
         """
 
-        is_create_operation = False   # Variable that checks for the CREATE operation type
+        is_create_operation = False  # Variable that checks for the CREATE operation type
         if operation_type.name == "CREATE":
             is_create_operation = True
 
-        empty_fields = 0   # Variable that counts the amount of total empty fields
-        empty_dropdown_fields = 0   # Variable that counts the amount of empty dropdown fields
+        empty_fields = 0  # Variable that counts the amount of total empty fields
+        empty_dropdown_fields = 0  # Variable that counts the amount of empty dropdown fields
 
         for label, var in self.label_widgets:
             if var.get() == "" or var.get() is False:
@@ -556,7 +570,9 @@ class CreateForm(BaseForm):
 
         tk.Button(self.second_frame, text="Submit",
                   command=lambda: self.submit_label_data(self.label_data, operation_type)).grid(row=5, column=2, padx=(0
-                                                                                        , 10), pady=7, )
+                                                                                                                       ,
+                                                                                                                       10),
+                                                                                                pady=7, )
 
 
 class OverwriteForm(BaseForm):
