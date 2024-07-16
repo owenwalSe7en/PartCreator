@@ -334,7 +334,7 @@ class OverwriteOperation(Operation):
                     main_window.child_window(auto_id='btnNo2').click_input()
                     operation_logger.log_operation("Overwrite", part_number, "n/a", "Incomplete - "
                                                                                     "part doesn't exist and therefore "
-                                                                                    "can't"
+                                                                                    "can't "
                                                                                     "be overwritten")
                     print(str(part_number) + " - Unable to overwrite: Part never existed")
                     continue
