@@ -170,6 +170,7 @@ def is_valid_row_combo(first_row, last_row):
     :type last_row: int
 
     :return: True if the rows are individually valid and a valid combination. False if any one of those is not true
+    includes a message to be shown in the message box if False
     :rtype: bool
     """
 
@@ -179,14 +180,13 @@ def is_valid_row_combo(first_row, last_row):
         if int(first_row) < int(last_row):
             # Check if more than 150 parts are being created
             if int(last_row) - int(first_row) < 150:
-                return True
+                return True, 'valid'
             else:
-                return False
+                return False, 'Row range cannot exceed 150 rows'
         else:
-            return False
+            return False, 'First row number must be less than last row number'
     else:
-        return False
-
+        return False, 'Invalid row numbers. Please enter two valid integers'
 
 def is_valid_column(column):
     """
@@ -431,8 +431,9 @@ class BaseForm:
                 return
 
         # Validate row order
-        if not is_valid_row_combo(target_dict["First Row"], target_dict["Last Row"]):
-            messagebox.showerror("Error", "Invalid row or row combination. Max row count of 150")
+        is_valid, message = is_valid_row_combo(target_dict["First Row"], target_dict["Last Row"])
+        if not is_valid:
+            messagebox.showerror("Error", message)
             return
 
         # Validate that each column has no empty cells
