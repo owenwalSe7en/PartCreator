@@ -135,6 +135,13 @@ def validate_file_location(file_path):
     if os.path.isdir(file_path):
         return False
 
+    # Check if the file is an Excel spreadsheet
+    _, file_extension = os.path.splitext(file_path)
+    valid_extensions = ['.xlsx', '.xls', '.xlsm']
+
+    if file_extension.lower() not in valid_extensions:
+            return False
+
     return True
 
 
