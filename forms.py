@@ -559,22 +559,22 @@ class CreateForm(BaseForm):
         self.second_frame = ttk.Frame(self.master, padding="10")
         self.second_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        self.create_dropdown_widget(self.second_frame, "Type", 13, TYPE_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "Type*", 13, TYPE_OPTIONS,
                                     0, 0, self.label_widgets)
-        self.create_dropdown_widget(self.second_frame, "On Hold Reason", 28, ON_HOLD_REASON_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "On Hold Reason*", 28, ON_HOLD_REASON_OPTIONS,
                                     5, 0, self.label_widgets)
-        self.create_dropdown_widget(self.second_frame, "Group", 28, GROUP_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "Group*", 28, GROUP_OPTIONS,
                                     1, 0, self.label_widgets)
-        self.create_dropdown_widget(self.second_frame, "Class", 28, CLASS_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "Class*", 28, CLASS_OPTIONS,
                                     2, 0, self.label_widgets)
-        self.create_dropdown_widget(self.second_frame, "Label Group", 28, LABEL_GROUP_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "Label Group*", 28, LABEL_GROUP_OPTIONS,
                                     3, 0, self.label_widgets)
-        self.create_dropdown_widget(self.second_frame, "Reporting Group", 28, REPORTING_GROUP_OPTIONS,
+        self.create_dropdown_widget(self.second_frame, "Reporting Group*", 28, REPORTING_GROUP_OPTIONS,
                                     4, 0, self.label_widgets)
-
         self.create_checkbox_widget(self.second_frame, "Priced Part", 0, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Salesforce Sync", 1, 2, self.label_widgets)
         self.create_checkbox_widget(self.second_frame, "Catalog Part", 2, 2, self.label_widgets)
+        tk.Label(self.second_frame, text="* = required field").grid(row=6, column=1)
 
         tk.Button(self.second_frame, text="Submit",
                   command=lambda: self.submit_label_data(self.label_data, operation_type)).grid(row=5, column=2, padx=(0
